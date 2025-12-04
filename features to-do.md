@@ -1,34 +1,30 @@
 # BUGS:
 
-dragging still not scaling correctly when not at default scale
-have the journal open up after some delay identifying long press, instead of waiting for the user to release
-journal opens with tap, should be long press
+paste photo shows as blank
 
 # SMALL TWEAKS
 
+let me drag and drop photos in, then ask if i want to add it as a sticker (borderless png) or normal photo
+
 change font of note to be the same as the journal modal
-add paper texture to the note
+
+add an edit button on the customization toolbar on the left of delete that does the same thing as a long press to open up the editor
 
 # MISSING FEATURES
 
-1. No Layering/Collage Support
-
-Junk journals are all about overlapping items - tickets over photos, washi tape across multiple items
-Currently each item is isolated; you can't create that authentic "glued on top of each other" look
-Fix: Add semi-transparent overlays, blend modes, or clipping masks
+background customization
 
 2. No Physical Ephemera Import
    Real junk journals include receipts, tickets, handwritten notes, magazine clippings
    You only support photos from camera roll
    Fix: Add document scanner integration (expo-document-picker or camera-based scanning)
-3. Limited Decoration Options
 
-No washi tape, stickers, stamps, or doodles yet
-The "tape" mentioned in specs isn't implemented
-Fix: Add SVG sticker library, draw-on-canvas capability, or stamp overlays
+3. Limited Decoration Options
+   No washi tape, stickers, stamps, or doodles yet
+   The "tape" mentioned in specs isn't implemented
+   Fix: Add SVG sticker library, draw-on-canvas capability, or stamp overlays
 
 No Handwriting/Drawing
-
 Real junk journals have hand-drawn doodles, arrows, circled dates
 Fix: Add react-native-sketch-canvas or drawing mode
 
@@ -46,11 +42,6 @@ Fix: Add gallery/timeline view showing all pages chronologically
 
 Sticky notes are basic; no typewriter text, no stamps, no handwriting fonts yet
 Fix: Load custom fonts (Patrick Hand, Caveat, Special Elite)
-
-14. No Export/Share
-
-Can't export pages as images to share or print
-Fix: Add react-native-view-shot to capture and share pages
 
 15. No Templates/Inspiration
 

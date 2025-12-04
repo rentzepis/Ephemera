@@ -7,10 +7,12 @@ import * as SplashScreen from 'expo-splash-screen';
 import Canvas from './src/components/Canvas';
 import Toolbar from './src/components/Toolbar';
 import JournalModal from './src/components/JournalModal';
+import CustomizationToolbar from './src/components/CustomizationToolbar';
 import Menu from './src/components/Menu';
 import PageIndicator from './src/components/PageIndicator';
 import { usePersistedPages } from './src/hooks/usePersistedPages';
 import { CanvasItem } from './src/types';
+import { DEFAULT_NOTE_COLOR } from './src/constants/colors';
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
@@ -37,6 +39,7 @@ export default function App() {
   } = usePersistedPages();
   
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [customizingItemId, setCustomizingItemId] = useState<string | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const touchStartX = useRef<number>(0);
@@ -69,7 +72,28 @@ export default function App() {
       rotation: randomRotation,
       scale: 1.0,
       zIndex: currentPage.items.length,
-      style: 'polaroid',
+      style: 'polaroid', // Default frame style
+      dateAdded: new Date().toISOString(),
+    };
+
+    addItem(newItem);
+  };
+
+  const handleAddPhotoAsSticker = (uri: string) => {
+    // Generate random position and rotation for new image sticker (no frame)
+    const randomX = Math.random() * (SCREEN_WIDTH - 150) + 10;
+    const randomY = Math.random() * (SCREEN_HEIGHT - 150) + 50;
+    const randomRotation = (Math.random() - 0.5) * 30; // -15 to 15 degrees
+
+    const newItem: CanvasItem = {
+      id: `item_${Date.now()}`,
+      type: 'sticker',
+      content: uri, // URI instead of emoji
+      x: randomX,
+      y: randomY,
+      rotation: randomRotation,
+      scale: 0.8,
+      zIndex: currentPage.items.length,
       dateAdded: new Date().toISOString(),
     };
 
@@ -86,6 +110,29 @@ export default function App() {
       id: `item_${Date.now()}`,
       type: 'text',
       content: '',
+      x: randomX,
+      y: randomY,
+      rotation: randomRotation,
+      scale: 1.0,
+      zIndex: currentPage.items.length,
+      noteColor: DEFAULT_NOTE_COLOR,
+      font: 'monospace', // Default to monospace
+      dateAdded: new Date().toISOString(),
+    };
+
+    addItem(newItem);
+  };
+
+  const handleAddSticker = (emoji: string) => {
+    // Generate random position and rotation for new sticker
+    const randomX = Math.random() * (SCREEN_WIDTH - 80) + 10;
+    const randomY = Math.random() * (SCREEN_HEIGHT - 80) + 50;
+    const randomRotation = (Math.random() - 0.5) * 20; // -10 to 10 degrees
+
+    const newItem: CanvasItem = {
+      id: `item_${Date.now()}`,
+      type: 'sticker',
+      content: emoji,
       x: randomX,
       y: randomY,
       rotation: randomRotation,
@@ -118,15 +165,63 @@ export default function App() {
   };
 
   const handleJournalOpen = (itemId: string) => {
-    // Open journal modal for photos on long-press
+    // Open journal modal for both photos and text notes on long-press
     const item = currentPage.items.find(i => i.id === itemId);
-    if (item?.type === 'image') {
+    if (item?.type === 'image' || item?.type === 'text') {
       setSelectedItemId(itemId);
     }
   };
 
-  const handleSaveJournal = (itemId: string, journalEntry: string) => {
-    updateItem(itemId, { journalEntry });
+  const handleItemSelect = (itemId: string) => {
+    setCustomizingItemId(itemId);
+  };
+
+  const handleItemDeselect = () => {
+    setCustomizingItemId(null);
+  };
+
+  const handleUpdateCustomizingItem = (updates: Partial<CanvasItem>) => {
+    if (customizingItemId) {
+      updateItem(customizingItemId, updates);
+    }
+  };
+
+  const handleDeleteCustomizingItem = () => {
+    if (customizingItemId) {
+      Alert.alert(
+        'Delete Item',
+        'Are you sure you want to delete this item?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              deleteItem(customizingItemId);
+              setCustomizingItemId(null);
+            },
+          },
+        ]
+      );
+    }
+  };
+
+  const handlePageChangeWithDeselect = (newPageIndex: number) => {
+    setCustomizingItemId(null); // Clear selection when changing pages
+    setCurrentPageIndex(newPageIndex);
+    scrollViewRef.current?.scrollTo({
+      x: newPageIndex * SCREEN_WIDTH,
+      animated: true,
+    });
+  };
+
+  const handleSaveJournal = (itemId: string, journalEntry: string, noteContent?: string) => {
+    if (noteContent !== undefined) {
+      // For text notes, update both content and journal entry
+      updateItem(itemId, { content: noteContent, journalEntry });
+    } else {
+      updateItem(itemId, { journalEntry });
+    }
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -146,6 +241,7 @@ export default function App() {
     const offsetX = event.nativeEvent.contentOffset.x;
     const newPageIndex = Math.round(offsetX / SCREEN_WIDTH);
     if (newPageIndex !== currentPageIndex && newPageIndex >= 0 && newPageIndex < pages.length) {
+      setCustomizingItemId(null); // Clear selection on page swipe
       setCurrentPageIndex(newPageIndex);
     }
   };
@@ -162,6 +258,7 @@ export default function App() {
   };
 
   const selectedItem = currentPage?.items.find(item => item.id === selectedItemId) || null;
+  const customizingItem = currentPage?.items.find(item => item.id === customizingItemId) || null;
 
   if (!fontsLoaded || isLoadingPages) {
     return (
@@ -196,6 +293,9 @@ export default function App() {
                 onUpdateItem={updateItem}
                 onBringToFront={handleLongPress}
                 onJournalOpen={handleJournalOpen}
+                onItemSelect={handleItemSelect}
+                onBackgroundPress={handleItemDeselect}
+                customizingItemId={customizingItemId}
               />
             </View>
           ))}
@@ -204,11 +304,18 @@ export default function App() {
         <PageIndicator
           currentPage={currentPageIndex}
           totalPages={pages.length}
-          onPageChange={handlePageChange}
+          onPageChange={handlePageChangeWithDeselect}
           onAddPage={addPage}
         />
         
-        <Toolbar onAddPhoto={handleAddPhoto} onAddText={handleAddText} />
+        <CustomizationToolbar
+          item={customizingItem}
+          visible={customizingItemId !== null}
+          onUpdateItem={handleUpdateCustomizingItem}
+          onDeleteItem={handleDeleteCustomizingItem}
+        />
+        
+        <Toolbar onAddPhoto={handleAddPhoto} onAddPhotoAsSticker={handleAddPhotoAsSticker} onAddText={handleAddText} onAddSticker={handleAddSticker} />
         
         <JournalModal
           visible={selectedItemId !== null}

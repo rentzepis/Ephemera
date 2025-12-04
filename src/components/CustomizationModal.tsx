@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { CanvasItem, FrameStyle, NoteColor } from '../types';
+import { NOTE_COLORS } from '../constants/colors';
 
 interface CustomizationModalProps {
   visible: boolean;
@@ -23,15 +24,6 @@ const FRAME_STYLES: { value: FrameStyle; label: string; emoji: string }[] = [
   { value: 'film-strip', label: 'Film Strip', emoji: '🎞️' },
   { value: 'vintage', label: 'Vintage', emoji: '📜' },
   { value: 'tape', label: 'Taped', emoji: '📎' },
-];
-
-const NOTE_COLORS: { value: NoteColor; label: string }[] = [
-  { value: '#FFF59D', label: 'Yellow' },
-  { value: '#FFE5E5', label: 'Pink' },
-  { value: '#E5F5FF', label: 'Blue' },
-  { value: '#E5FFE5', label: 'Green' },
-  { value: '#F5E5FF', label: 'Purple' },
-  { value: '#FFE5D9', label: 'Peach' },
 ];
 
 export default function CustomizationModal({

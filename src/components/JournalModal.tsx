@@ -17,7 +17,7 @@ interface JournalModalProps {
   visible: boolean;
   item: CanvasItem | null;
   onClose: () => void;
-  onSave: (itemId: string, journalEntry: string) => void;
+  onSave: (itemId: string, journalEntry: string, noteContent?: string) => void;
   onDelete: (itemId: string) => void;
 }
 
@@ -29,17 +29,24 @@ export default function JournalModal({
   onDelete,
 }: JournalModalProps) {
   const [journalText, setJournalText] = useState(item?.journalEntry || '');
+  const [noteContent, setNoteContent] = useState(item?.type === 'text' ? item.content : '');
 
   React.useEffect(() => {
     if (item) {
       setJournalText(item.journalEntry || '');
+      setNoteContent(item.type === 'text' ? item.content : '');
     }
   }, [item]);
 
   if (!item) return null;
 
   const handleSave = () => {
-    onSave(item.id, journalText);
+    if (item.type === 'text') {
+      // For text notes, update both content and journal entry
+      onSave(item.id, journalText, noteContent);
+    } else {
+      onSave(item.id, journalText);
+    }
     onClose();
   };
 
@@ -91,17 +98,32 @@ export default function JournalModal({
               </TouchableOpacity>
             </View>
 
-            {/* Journal Entry Input */}
+            {/* Content Inputs */}
             <ScrollView style={styles.scrollContainer}>
-              <TextInput
-                style={styles.journalInput}
-                value={journalText}
-                onChangeText={setJournalText}
-                placeholder="What do you remember about this?"
-                placeholderTextColor="#999"
-                multiline
-                textAlignVertical="top"
-              />
+              {item.type === 'text' ? (
+                <>
+                  <Text style={styles.sectionLabel}>Note Text</Text>
+                  <TextInput
+                    style={[styles.journalInput, styles.noteContentInput]}
+                    value={noteContent}
+                    onChangeText={setNoteContent}
+                    placeholder="Write your note..."
+                    placeholderTextColor="#999"
+                    multiline
+                    textAlignVertical="top"
+                  />
+                </>
+              ) : (
+                <TextInput
+                  style={styles.journalInput}
+                  value={journalText}
+                  onChangeText={setJournalText}
+                  placeholder="What do you remember about this?"
+                  placeholderTextColor="#999"
+                  multiline
+                  textAlignVertical="top"
+                />
+              )}
             </ScrollView>
 
             {/* Action Buttons */}
@@ -182,12 +204,25 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 20,
   },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+    marginTop: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   journalInput: {
     fontSize: 16,
     color: '#333',
     lineHeight: 24,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     minHeight: 200,
+  },
+  noteContentInput: {
+    minHeight: 80,
+    marginBottom: 16,
   },
   actions: {
     flexDirection: 'row',

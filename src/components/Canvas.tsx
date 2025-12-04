@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, StyleSheet, Dimensions, Animated, PanResponder } from 'react-native';
+import { View, StyleSheet, Dimensions, Animated, PanResponder, TouchableWithoutFeedback } from 'react-native';
 import { CanvasItem } from '../types';
 import DraggableItem from './DraggableItem';
 
@@ -10,9 +10,12 @@ interface CanvasProps {
   onUpdateItem: (id: string, updates: Partial<CanvasItem>) => void;
   onBringToFront: (id: string) => void;
   onJournalOpen: (id: string) => void;
+  onItemSelect: (id: string) => void;
+  onBackgroundPress: () => void;
+  customizingItemId: string | null;
 }
 
-export default function Canvas({ items, onUpdateItem, onBringToFront, onJournalOpen }: CanvasProps) {
+export default function Canvas({ items, onUpdateItem, onBringToFront, onJournalOpen, onItemSelect, onBackgroundPress, customizingItemId }: CanvasProps) {
   const panX = useRef(new Animated.Value(0)).current;
   const panY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
@@ -90,6 +93,10 @@ export default function Canvas({ items, onUpdateItem, onBringToFront, onJournalO
     return scale.__getValue ? scale.__getValue() : currentScale;
   };
 
+  const handleBackgroundPress = () => {
+    onBackgroundPress();
+  };
+
   return (
     <View style={styles.container} {...canvasPanResponder.panHandlers}>
       <Animated.View
@@ -104,6 +111,9 @@ export default function Canvas({ items, onUpdateItem, onBringToFront, onJournalO
           },
         ]}
       >
+        <TouchableWithoutFeedback onPress={handleBackgroundPress}>
+          <View style={styles.backgroundOverlay} />
+        </TouchableWithoutFeedback>
         {items.map((item) => (
           <DraggableItem
             key={item.id}
@@ -111,7 +121,9 @@ export default function Canvas({ items, onUpdateItem, onBringToFront, onJournalO
             onUpdate={(updates) => onUpdateItem(item.id, updates)}
             onLongPress={() => onBringToFront(item.id)}
             onJournalOpen={() => onJournalOpen(item.id)}
+            onSelect={() => onItemSelect(item.id)}
             getCanvasScale={getCanvasScale}
+            isCustomizing={customizingItemId === item.id}
           />
         ))}
       </Animated.View>
@@ -128,5 +140,13 @@ const styles = StyleSheet.create({
     flex: 1,
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
+  },
+  backgroundOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
   },
 });

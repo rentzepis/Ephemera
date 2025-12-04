@@ -2,12 +2,12 @@ export type ItemType = 'image' | 'text' | 'sticker';
 
 export type FrameStyle = 'polaroid' | 'plain' | 'film-strip' | 'vintage' | 'tape';
 
-export type NoteColor = '#FFF59D' | '#FFE5E5' | '#E5F5FF' | '#E5FFE5' | '#F5E5FF' | '#FFE5D9';
+export type NoteColor = '#FFD54F' | '#EF9A9A' | '#90CAF9' | '#A5D6A7' | '#CE93D8' | '#FFAB91';
 
 export interface CanvasItem {
   id: string;
   type: ItemType;
-  content: string; // file URI for images, text content for text, asset name for stickers
+  content: string; // file URI for images/image-stickers, text content for text, emoji for emoji stickers
   x: number;
   y: number;
   rotation: number;
@@ -15,7 +15,8 @@ export interface CanvasItem {
   zIndex: number;
   style?: FrameStyle;
   noteColor?: NoteColor;
-  font?: 'handwritten' | 'serif';
+  font?: 'monospace' | 'script' | 'serif';
+  showDate?: boolean;
   dateAdded: string; // ISO-8601 date string
   journalEntry?: string; // User's notes about this item
   location?: string; // Optional location metadata

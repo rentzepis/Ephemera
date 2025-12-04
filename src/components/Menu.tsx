@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Modal,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,11 +16,17 @@ interface MenuProps {
 
 export default function Menu({ onClearCanvas }: MenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showGestureGuide, setShowGestureGuide] = useState(false);
   const insets = useSafeAreaInsets();
 
   const handleClearCanvas = () => {
     setIsMenuOpen(false);
     onClearCanvas();
+  };
+
+  const handleShowGestureGuide = () => {
+    setIsMenuOpen(false);
+    setShowGestureGuide(true);
   };
 
   return (
@@ -44,23 +51,85 @@ export default function Menu({ onClearCanvas }: MenuProps) {
           activeOpacity={1}
           onPress={() => setIsMenuOpen(false)}
         >
-          <View style={[styles.menuPanel, { top: insets.top + 60 }]}>
-            <TouchableOpacity style={styles.menuItem} onPress={handleClearCanvas}>
-              <Text style={styles.menuItemIcon}>🗑️</Text>
-              <Text style={[styles.menuItemText, styles.dangerText]}>Clear Page</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={[styles.menuPanel, { top: insets.top + 60 }]}>
+              <TouchableOpacity style={styles.menuItem} onPress={handleShowGestureGuide}>
+                <Text style={styles.menuItemIcon}>👆</Text>
+                <Text style={styles.menuItemText}>Gesture Guide</Text>
+              </TouchableOpacity>
 
-            <View style={styles.menuDivider} />
+              <View style={styles.menuDivider} />
+
+              <TouchableOpacity style={styles.menuItem} onPress={handleClearCanvas}>
+                <Text style={styles.menuItemIcon}>🗑️</Text>
+                <Text style={[styles.menuItemText, styles.dangerText]}>Clear Page</Text>
+              </TouchableOpacity>
+
+              <View style={styles.menuDivider} />
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => setIsMenuOpen(false)}
+              >
+                <Text style={styles.menuItemIcon}>✕</Text>
+                <Text style={styles.menuItemText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Gesture Guide Modal */}
+      <Modal
+        visible={showGestureGuide}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowGestureGuide(false)}
+      >
+        <View style={styles.guideOverlay}>
+          <View style={styles.guidePanel}>
+            <Text style={styles.guideTitle}>Gesture Guide</Text>
+            
+            <ScrollView style={styles.guideScroll}>
+              <View style={styles.guideSection}>
+                <Text style={styles.guideSectionTitle}>Canvas</Text>
+                <Text style={styles.guideItem}>• Two fingers: Pan and zoom canvas</Text>
+                <Text style={styles.guideItem}>• Tap empty space: Close customization toolbar</Text>
+              </View>
+
+              <View style={styles.guideSection}>
+                <Text style={styles.guideSectionTitle}>Items (Photos, Notes, Stickers)</Text>
+                <Text style={styles.guideItem}>• Tap: Select for customization</Text>
+                <Text style={styles.guideItem}>• Long press (hold): Edit content/journal entry</Text>
+                <Text style={styles.guideItem}>• Drag: Move item</Text>
+                <Text style={styles.guideItem}>• Two-finger rotate: Rotate item</Text>
+                <Text style={styles.guideItem}>• Pinch: Scale item</Text>
+              </View>
+
+              <View style={styles.guideSection}>
+                <Text style={styles.guideSectionTitle}>Pages</Text>
+                <Text style={styles.guideItem}>• Swipe left/right: Navigate pages</Text>
+                <Text style={styles.guideItem}>• Tap page indicator: Jump to page</Text>
+              </View>
+
+              <View style={styles.guideSection}>
+                <Text style={styles.guideSectionTitle}>Adding Content</Text>
+                <Text style={styles.guideItem}>• + button: Add photo, note, or sticker</Text>
+                <Text style={styles.guideItem}>• Paste: Add image from clipboard</Text>
+              </View>
+            </ScrollView>
 
             <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => setIsMenuOpen(false)}
+              style={styles.guideCloseButton}
+              onPress={() => setShowGestureGuide(false)}
             >
-              <Text style={styles.menuItemIcon}>✕</Text>
-              <Text style={styles.menuItemText}>Close</Text>
+              <Text style={styles.guideCloseText}>Got it!</Text>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </>
   );
@@ -137,5 +206,57 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#e0e0e0',
     marginVertical: 4,
+  },
+  guideOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  guidePanel: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+  },
+  guideTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
+  },
+  guideScroll: {
+    maxHeight: 400,
+  },
+  guideSection: {
+    marginBottom: 20,
+  },
+  guideSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#2196f3',
+  },
+  guideItem: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: '#555',
+    marginBottom: 4,
+  },
+  guideCloseButton: {
+    backgroundColor: '#2196f3',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  guideCloseText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

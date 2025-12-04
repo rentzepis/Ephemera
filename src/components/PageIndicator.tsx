@@ -40,7 +40,7 @@ export default function PageIndicator({ currentPage, totalPages, onPageChange, o
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 80,
+    top: Platform.OS === 'ios' ? 60 : 20, // Below dynamic island on iOS, standard margin on Android
     left: 0,
     right: 0,
     alignItems: 'center',

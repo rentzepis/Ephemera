@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text, Image } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { CanvasItem } from '../types';
 import PhotoFrame from './PhotoFrame';
@@ -11,10 +11,12 @@ interface DraggableItemProps {
   onUpdate: (updates: Partial<CanvasItem>) => void;
   onLongPress: () => void;
   onJournalOpen: () => void;
+  onSelect: () => void;
   getCanvasScale: () => number;
+  isCustomizing: boolean;
 }
 
-export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOpen, getCanvasScale }: DraggableItemProps) {
+export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOpen, onSelect, getCanvasScale, isCustomizing }: DraggableItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [livePosition, setLivePosition] = useState({ x: item.x, y: item.y });
   
@@ -68,9 +70,8 @@ export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOp
             isLongPress.current = true;
             Haptics.selectionAsync();
             onLongPress();
-            if (item.type === 'image') {
-              onJournalOpen();
-            }
+            // Open journal modal for both images and text notes
+            onJournalOpen();
           }
         }, 500);
       },
@@ -78,14 +79,14 @@ export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOp
       onPanResponderMove: (evt, gesture) => {
         const moveDistance = Math.sqrt(gesture.dx * gesture.dx + gesture.dy * gesture.dy);
         
-        // Cancel long-press if finger moves
-        if (moveDistance > 8 && longPressTimeout.current) {
+        // Cancel long-press if finger moves significantly
+        if (moveDistance > 15 && longPressTimeout.current) {
           clearTimeout(longPressTimeout.current);
           longPressTimeout.current = null;
         }
         
         // Start dragging if moved enough
-        if (moveDistance > 8 && !hasDragged.current) {
+        if (moveDistance > 15 && !hasDragged.current) {
           hasDragged.current = true;
         }
         
@@ -133,18 +134,15 @@ export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOp
           return;
         }
         
-        // Handle double-tap for text editing
+        // Handle tap interactions
         if (moveDistance < 8 && pressDuration < 500) {
           const now = Date.now();
           const timeSinceLastTap = now - lastTapTime.current;
           
-          // Double-tap on text notes enables editing
-          if (item.type === 'text' && timeSinceLastTap < 300) {
-            setIsEditing(true);
-            lastTapTime.current = 0;
-          } else {
-            lastTapTime.current = now;
-          }
+          // Single tap brings to front and selects for customization
+          onLongPress(); // This calls bringToFront
+          onSelect();
+          lastTapTime.current = now;
         }
       },
       
@@ -174,6 +172,7 @@ export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOp
           ],
           zIndex: item.zIndex,
         },
+        isCustomizing && styles.selected,
       ]}
     >
       {item.type === 'image' && (
@@ -184,8 +183,23 @@ export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOp
           text={item.content} 
           onTextChange={(text) => onUpdate({ content: text })}
           backgroundColor={item.noteColor}
+          font={item.font}
           editable={isEditing}
+          showDate={item.showDate}
+          dateAdded={item.dateAdded}
         />
+      )}
+      {item.type === 'sticker' && (
+        <>
+          {(item.content.includes('://') || item.content.startsWith('/') || item.content.startsWith('data:')) ? (
+            <Image 
+              source={{ uri: item.content }} 
+              style={styles.stickerImage}
+            />
+          ) : (
+            <Text style={styles.sticker}>{item.content}</Text>
+          )}
+        </>
       )}
     </View>
   );
@@ -194,5 +208,19 @@ export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOp
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
+  },
+  selected: {
+    borderWidth: 2,
+    borderColor: 'rgba(33, 150, 243, 0.8)', // Blue selection border
+    borderRadius: 4,
+  },
+  sticker: {
+    fontSize: 60,
+    userSelect: 'none',
+  },
+  stickerImage: {
+    width: 150,
+    height: 150,
+    resizeMode: 'contain',
   },
 });
