@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import Canvas from './src/components/Canvas';
-import Toolbar from './src/components/Toolbar';
+import Toolbar, { ToolbarRef } from './src/components/Toolbar';
 import JournalModal from './src/components/JournalModal';
 import CustomizationToolbar from './src/components/CustomizationToolbar';
 import Menu from './src/components/Menu';
@@ -41,6 +41,7 @@ export default function App() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [customizingItemId, setCustomizingItemId] = useState<string | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
+  const toolbarRef = useRef<ToolbarRef>(null);
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const touchStartX = useRef<number>(0);
 
@@ -94,6 +95,7 @@ export default function App() {
       rotation: randomRotation,
       scale: 0.8,
       zIndex: currentPage.items.length,
+      stickerSize: 'medium',
       dateAdded: new Date().toISOString(),
     };
 
@@ -138,6 +140,7 @@ export default function App() {
       rotation: randomRotation,
       scale: 1.0,
       zIndex: currentPage.items.length,
+      stickerSize: 'medium',
       dateAdded: new Date().toISOString(),
     };
 
@@ -165,9 +168,9 @@ export default function App() {
   };
 
   const handleJournalOpen = (itemId: string) => {
-    // Open journal modal for both photos and text notes on long-press
+    // Open journal modal for photos, text notes, and stickers on long-press
     const item = currentPage.items.find(i => i.id === itemId);
-    if (item?.type === 'image' || item?.type === 'text') {
+    if (item?.type === 'image' || item?.type === 'text' || item?.type === 'sticker') {
       setSelectedItemId(itemId);
     }
   };
@@ -242,6 +245,7 @@ export default function App() {
     const newPageIndex = Math.round(offsetX / SCREEN_WIDTH);
     if (newPageIndex !== currentPageIndex && newPageIndex >= 0 && newPageIndex < pages.length) {
       setCustomizingItemId(null); // Clear selection on page swipe
+      toolbarRef.current?.closeMenu(); // Close toolbar menu on page change
       setCurrentPageIndex(newPageIndex);
     }
   };
@@ -313,9 +317,10 @@ export default function App() {
           visible={customizingItemId !== null}
           onUpdateItem={handleUpdateCustomizingItem}
           onDeleteItem={handleDeleteCustomizingItem}
+          onClose={() => setCustomizingItemId(null)}
         />
         
-        <Toolbar onAddPhoto={handleAddPhoto} onAddPhotoAsSticker={handleAddPhotoAsSticker} onAddText={handleAddText} onAddSticker={handleAddSticker} />
+        <Toolbar ref={toolbarRef} onAddPhoto={handleAddPhoto} onAddPhotoAsSticker={handleAddPhotoAsSticker} onAddText={handleAddText} onAddSticker={handleAddSticker} />
         
         <JournalModal
           visible={selectedItemId !== null}

@@ -18,10 +18,10 @@ interface CanvasProps {
 export default function Canvas({ items, onUpdateItem, onBringToFront, onJournalOpen, onItemSelect, onBackgroundPress, customizingItemId }: CanvasProps) {
   const panX = useRef(new Animated.Value(0)).current;
   const panY = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(1)).current;
-  const baseScale = useRef(1);
+  const scale = useRef(new Animated.Value(0.5)).current;
+  const baseScale = useRef(0.5);
   const initialDistance = useRef(0);
-  const [currentScale, setCurrentScale] = useState(1);
+  const [currentScale, setCurrentScale] = useState(0.5);
 
   const getDistance = (touches: any[]) => {
     if (touches.length < 2) return 0;
@@ -110,6 +110,8 @@ export default function Canvas({ items, onUpdateItem, onBringToFront, onJournalO
             ],
           },
         ]}
+        renderToHardwareTextureAndroid
+        shouldRasterizeIOS
       >
         <TouchableWithoutFeedback onPress={handleBackgroundPress}>
           <View style={styles.backgroundOverlay} />
@@ -138,8 +140,6 @@ const styles = StyleSheet.create({
   },
   canvas: {
     flex: 1,
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
   },
   backgroundOverlay: {
     position: 'absolute',

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, Dimensions } from 'react-native';
-import { CanvasItem, FrameStyle, NoteColor } from '../types';
+import { CanvasItem, FrameStyle, NoteColor, StickerSize } from '../types';
 import { NOTE_COLORS } from '../constants/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -10,6 +10,7 @@ interface CustomizationToolbarProps {
   visible: boolean;
   onUpdateItem: (updates: Partial<CanvasItem>) => void;
   onDeleteItem: () => void;
+  onClose: () => void;
 }
 
 const FRAME_STYLES: { value: FrameStyle; label: string }[] = [
@@ -26,7 +27,14 @@ const FONT_OPTIONS: { value: 'monospace' | 'script' | 'serif'; label: string }[]
   { value: 'serif', label: 'Serif' },
 ];
 
-export default function CustomizationToolbar({ item, visible, onUpdateItem, onDeleteItem }: CustomizationToolbarProps) {
+const STICKER_SIZES: { value: StickerSize; label: string }[] = [
+  { value: 'small', label: 'Small' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'large', label: 'Large' },
+  { value: 'xlarge', label: 'X-Large' },
+];
+
+export default function CustomizationToolbar({ item, visible, onUpdateItem, onDeleteItem, onClose }: CustomizationToolbarProps) {
   const slideAnim = useRef(new Animated.Value(200)).current; // Start off-screen
 
   useEffect(() => {
@@ -42,27 +50,44 @@ export default function CustomizationToolbar({ item, visible, onUpdateItem, onDe
 
   const isImage = item.type === 'image';
   const isText = item.type === 'text';
+  const isSticker = item.type === 'sticker';
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
+    <>
+      {visible && (
+        <TouchableOpacity
+          style={styles.overlay}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+      )}
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
       <View style={styles.toolbar}>
         <View style={styles.header}>
           <Text style={styles.title}>
-            {isImage ? 'Frame Style' : 'Note Style'}
+            {isImage ? 'Frame Style' : isSticker ? 'Emoji Size' : 'Note Style'}
           </Text>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={onDeleteItem}
-          >
-            <Text style={styles.deleteButtonText}>Delete</Text>
-          </TouchableOpacity>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={onDeleteItem}
+            >
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onClose}
+            >
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {isImage && (
@@ -165,17 +190,56 @@ export default function CustomizationToolbar({ item, visible, onUpdateItem, onDe
             </ScrollView>
           </View>
         )}
+
+        {isSticker && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.optionsContainer}
+          >
+            {STICKER_SIZES.map((size) => (
+              <TouchableOpacity
+                key={size.value}
+                style={[
+                  styles.option,
+                  (item.stickerSize || 'medium') === size.value && styles.optionSelected,
+                ]}
+                onPress={() => onUpdateItem({ stickerSize: size.value })}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    (item.stickerSize || 'medium') === size.value && styles.optionTextSelected,
+                  ]}
+                >
+                  {size.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
     </Animated.View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 998,
+  },
   container: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    zIndex: 999,
   },
   toolbar: {
     backgroundColor: '#fff',
@@ -202,6 +266,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   deleteButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -214,6 +283,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#d32f2f',
     fontWeight: '600',
+  },
+  closeButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  closeButtonText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
   },
   optionsContainer: {
     flexDirection: 'row',

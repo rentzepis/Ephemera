@@ -56,6 +56,13 @@ export default function Menu({ onClearCanvas }: MenuProps) {
             onPress={(e) => e.stopPropagation()}
           >
             <View style={[styles.menuPanel, { top: insets.top + 60 }]}>
+              <View style={styles.menuHeader}>
+                <Text style={styles.menuTitle}>Ephemera</Text>
+                <Text style={styles.menuSubtitle}>A memory collage • Junk journal • Digital scrapbook</Text>
+              </View>
+
+              <View style={styles.menuDivider} />
+
               <TouchableOpacity style={styles.menuItem} onPress={handleShowGestureGuide}>
                 <Text style={styles.menuItemIcon}>👆</Text>
                 <Text style={styles.menuItemText}>Gesture Guide</Text>
@@ -145,7 +152,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000,
+    zIndex: 10000,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -184,6 +191,23 @@ const styles = StyleSheet.create({
         elevation: 8,
       },
     }),
+  },
+  menuHeader: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  menuTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  menuSubtitle: {
+    fontSize: 11,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 16,
   },
   menuItem: {
     flexDirection: 'row',

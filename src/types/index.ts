@@ -4,6 +4,8 @@ export type FrameStyle = 'polaroid' | 'plain' | 'film-strip' | 'vintage' | 'tape
 
 export type NoteColor = '#FFD54F' | '#EF9A9A' | '#90CAF9' | '#A5D6A7' | '#CE93D8' | '#FFAB91';
 
+export type StickerSize = 'small' | 'medium' | 'large' | 'xlarge';
+
 export interface CanvasItem {
   id: string;
   type: ItemType;
@@ -17,6 +19,7 @@ export interface CanvasItem {
   noteColor?: NoteColor;
   font?: 'monospace' | 'script' | 'serif';
   showDate?: boolean;
+  stickerSize?: StickerSize; // Size for stickers
   dateAdded: string; // ISO-8601 date string
   journalEntry?: string; // User's notes about this item
   location?: string; // Optional location metadata

@@ -63,7 +63,7 @@ export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOp
         hasDragged.current = false;
         isLongPress.current = false;
         
-        // Start long-press detection timer
+        // Start long-press detection timer (reduced from 500ms to 400ms)
         longPressTimeout.current = setTimeout(() => {
           // Only trigger if haven't started dragging
           if (!hasDragged.current) {
@@ -73,20 +73,20 @@ export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOp
             // Open journal modal for both images and text notes
             onJournalOpen();
           }
-        }, 500);
+        }, 400);
       },
       
       onPanResponderMove: (evt, gesture) => {
         const moveDistance = Math.sqrt(gesture.dx * gesture.dx + gesture.dy * gesture.dy);
         
-        // Cancel long-press if finger moves significantly
-        if (moveDistance > 15 && longPressTimeout.current) {
+        // Cancel long-press if finger moves significantly (increased threshold)
+        if (moveDistance > 25 && longPressTimeout.current) {
           clearTimeout(longPressTimeout.current);
           longPressTimeout.current = null;
         }
         
         // Start dragging if moved enough
-        if (moveDistance > 15 && !hasDragged.current) {
+        if (moveDistance > 25 && !hasDragged.current) {
           hasDragged.current = true;
         }
         
@@ -172,7 +172,7 @@ export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOp
           ],
           zIndex: item.zIndex,
         },
-        isCustomizing && styles.selected,
+        item.type !== 'sticker' && isCustomizing && styles.selected,
       ]}
     >
       {item.type === 'image' && (
@@ -190,16 +190,28 @@ export default function DraggableItem({ item, onUpdate, onLongPress, onJournalOp
         />
       )}
       {item.type === 'sticker' && (
-        <>
+        <View style={isCustomizing && styles.selected}>
           {(item.content.includes('://') || item.content.startsWith('/') || item.content.startsWith('data:')) ? (
             <Image 
               source={{ uri: item.content }} 
-              style={styles.stickerImage}
+              style={[
+                styles.stickerImage,
+                item.stickerSize === 'small' && styles.stickerImageSmall,
+                item.stickerSize === 'large' && styles.stickerImageLarge,
+                item.stickerSize === 'xlarge' && styles.stickerImageXLarge,
+              ]}
+              resizeMode="contain"
+              resizeMethod="scale"
             />
           ) : (
-            <Text style={styles.sticker}>{item.content}</Text>
+            <Text style={[
+              styles.emoji,
+              item.stickerSize === 'small' && styles.emojiSmall,
+              item.stickerSize === 'large' && styles.emojiLarge,
+              item.stickerSize === 'xlarge' && styles.emojiXLarge,
+            ]}>{item.content}</Text>
           )}
-        </>
+        </View>
       )}
     </View>
   );
@@ -214,13 +226,33 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(33, 150, 243, 0.8)', // Blue selection border
     borderRadius: 4,
   },
-  sticker: {
-    fontSize: 60,
+  emoji: {
+    fontSize: 80, // medium
     userSelect: 'none',
   },
+  emojiSmall: {
+    fontSize: 50,
+  },
+  emojiLarge: {
+    fontSize: 140,
+  },
+  emojiXLarge: {
+    fontSize: 200,
+  },
   stickerImage: {
-    width: 150,
-    height: 150,
-    resizeMode: 'contain',
+    width: 250, // medium
+    height: 250,
+  },
+  stickerImageSmall: {
+    width: 120,
+    height: 120,
+  },
+  stickerImageLarge: {
+    width: 400,
+    height: 400,
+  },
+  stickerImageXLarge: {
+    width: 500,
+    height: 500,
   },
 });

@@ -13,7 +13,7 @@ export default function PhotoFrame({ uri, frameStyle }: PhotoFrameProps) {
       <View style={styles.plainContainer}>
         <Image 
           source={{ uri }} 
-          style={styles.image} 
+          style={styles.plainImage} 
           resizeMode="cover"
         />
       </View>
@@ -80,6 +80,9 @@ export default function PhotoFrame({ uri, frameStyle }: PhotoFrameProps) {
 
 const styles = StyleSheet.create({
   plainContainer: {
+    maxWidth: 300,
+    maxHeight: 300,
+    alignSelf: 'flex-start',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -92,9 +95,14 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  image: {
+  plainImage: {
     width: 200,
     height: 200,
+    resizeMode: 'cover',
+  },
+  image: {
+    minWidth: 200,
+    minHeight: 200,
   },
   polaroidContainer: {
     position: 'relative',

@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { CanvasItem, FrameStyle, NoteColor } from '../types';
+import { CanvasItem, FrameStyle, NoteColor, StickerSize } from '../types';
 import { NOTE_COLORS } from '../constants/colors';
 
 interface CustomizationModalProps {
@@ -18,9 +18,16 @@ interface CustomizationModalProps {
   onUpdate: (updates: Partial<CanvasItem>) => void;
 }
 
+const STICKER_SIZES: { value: StickerSize; label: string; emoji: string }[] = [
+  { value: 'small', label: 'Small', emoji: '🔸' },
+  { value: 'medium', label: 'Medium', emoji: '🔶' },
+  { value: 'large', label: 'Large', emoji: '🔷' },
+  { value: 'xlarge', label: 'X-Large', emoji: '🔴' },
+];
+
 const FRAME_STYLES: { value: FrameStyle; label: string; emoji: string }[] = [
   { value: 'polaroid', label: 'Polaroid', emoji: '📷' },
-  { value: 'plain', label: 'Plain', emoji: '🖼️' },
+  { value: 'plain', label: 'None', emoji: '🖼️' },
   { value: 'film-strip', label: 'Film Strip', emoji: '🎞️' },
   { value: 'vintage', label: 'Vintage', emoji: '📜' },
   { value: 'tape', label: 'Taped', emoji: '📎' },
@@ -36,6 +43,7 @@ export default function CustomizationModal({
 
   const isPhoto = item.type === 'image';
   const isNote = item.type === 'text';
+  const isSticker = item.type === 'sticker';
 
   return (
     <Modal
@@ -57,7 +65,7 @@ export default function CustomizationModal({
           >
             <View style={styles.modal}>
               <Text style={styles.title}>
-                {isPhoto ? '📷 Photo Frame' : '📝 Note Style'}
+                {isPhoto ? '📷 Photo Frame' : isSticker ? '✨ Emoji Size' : '📝 Note Style'}
               </Text>
 
               <ScrollView style={styles.optionsContainer}>
@@ -110,6 +118,31 @@ export default function CustomizationModal({
                         </TouchableOpacity>
                       ))}
                     </View>
+                  </View>
+                )}
+
+                {isSticker && (
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Emoji Size</Text>
+                    {STICKER_SIZES.map((size) => (
+                      <TouchableOpacity
+                        key={size.value}
+                        style={[
+                          styles.option,
+                          (item.stickerSize || 'medium') === size.value && styles.optionSelected,
+                        ]}
+                        onPress={() => {
+                          onUpdate({ stickerSize: size.value });
+                          onClose();
+                        }}
+                      >
+                        <Text style={styles.optionEmoji}>{size.emoji}</Text>
+                        <Text style={styles.optionText}>{size.label}</Text>
+                        {(item.stickerSize || 'medium') === size.value && (
+                          <Text style={styles.checkmark}>✓</Text>
+                        )}
+                      </TouchableOpacity>
+                    ))}
                   </View>
                 )}
               </ScrollView>
